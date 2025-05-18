@@ -6,7 +6,6 @@ from mysql.connector import Error
 def Conexion():
     """
     Establece y devuelve una conexión a la base de datos MySQL.
-    Asegúrate de ajustar host, user, password y database según tu entorno.
     """
     try:
         connection = mysql.connector.connect(

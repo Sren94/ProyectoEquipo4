@@ -1,6 +1,6 @@
 from Conexion import Conexion
 import bcrypt
-
+from Admin import login_superadmin
 
 def crear_admin(usuario, contrasena, rol='admin'):
     """
