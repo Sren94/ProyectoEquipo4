@@ -3,6 +3,7 @@ from tkinter import messagebox
 import bcrypt
 import tkinter as tk
 
+
 #Luis Rene y Cintia
 class SuperAdminLogin:
     def __init__(self):
@@ -28,7 +29,6 @@ class SuperAdminLogin:
         self.ventana.mainloop()
 
     def mostrar_panel_bienvenida(self, usuario):
-        self.ventana.destroy()
         panel = tk.Tk()
         panel.title("Panel de Bienvenida")
         panel.geometry("400x300")
@@ -36,7 +36,12 @@ class SuperAdminLogin:
         label_bienvenida = tk.Label(panel, text=f"Bienvenido, {usuario}", font=("Arial", 14))
         label_bienvenida.pack(pady=10)
 
-        botones = ["Módulo de Gestión de Estudiantes", "Módulo de Gestión de Cursos e Inscripciones", "Módulo de Gestión de Calificaciones"]
+        # Botón que abrirá la nueva clase de interfaz
+        boton_estudiantes = tk.Button(panel, text="Módulo de Gestión de Estudiantes", width=40, height=2,
+                                  command=lambda: self.abrir_gestion_estudiantes(panel))
+        boton_estudiantes.pack(pady=5)
+        
+        botones = ["Módulo de Gestión de Cursos e Inscripciones", "Módulo de Gestión de Calificaciones"]
         for texto in botones:
             boton = tk.Button(panel, text=texto, width=40, height=2)
             boton.pack(pady=5)
@@ -66,11 +71,21 @@ class SuperAdminLogin:
         usuario = self.entry_usuario.get()
         contrasena = self.entry_contrasena.get()
         if self.login_superadmin(usuario, contrasena):
+            self.usuario_actual = usuario
             messagebox.showinfo("Éxito", "Inicio de sesión exitoso.")
             self.mostrar_panel_bienvenida(usuario)
+            self.ventana.destroy()
         else:
             messagebox.showerror("Error", "Credenciales incorrectas o usuario no es superadmin.")
+    
+    def abrir_gestion_estudiantes(self, ventana_actual):
+        ventana_actual.destroy()
 
+        def volver_a_bienvenida():
+            self.mostrar_panel_bienvenida(self.usuario_actual)
 
+        from interfaces.Modelos.Estudiante import Estudiante
+        Estudiante(callback_volver=volver_a_bienvenida)             
+        
 if __name__ == "__main__":
     SuperAdminLogin()
