@@ -2,7 +2,7 @@ from .Modelos import Conexion as Conexion
 from tkinter import messagebox, ttk
 import bcrypt
 import tkinter as tk
-from .Modelos.Cursos import Curso  # Asegúrate de que la ruta sea correcta
+from .Modelos.Cursos import Curso  
 from .Modelos.Estudiante import Estudiante  # Para abrir la interfaz de estudiantes
 
 # Clase para la interfaz de Cursos (con botón Regresar)
