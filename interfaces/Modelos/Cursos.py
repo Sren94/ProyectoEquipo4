@@ -1,4 +1,4 @@
-from Conexion import Conexion
+from .Conexion import Conexion
 
 class Curso:
     @staticmethod
@@ -7,7 +7,7 @@ class Curso:
         creado=False
         if conexion:
             cursor = conexion.cursor()
-            query = """INSERT INTO Cursos (nombre, descripcion,creditos) VALUES (%s, %s,%s)"""
+            query = """INSERT INTO cursos (nombre, descripcion,creditos) VALUES (%s, %s,%s)"""
             try:
                 cursor.execute(query, (nombre, descripcion,creditos))
                 conexion.commit()
@@ -24,7 +24,7 @@ class Curso:
         conexion = Conexion()
         if conexion:
             cursor = conexion.cursor(dictionary=True)
-            query = "SELECT * FROM Cursos"
+            query = "SELECT * FROM cursos"
             try:
                 cursor.execute(query)
                 cursos = cursor.fetchall()
@@ -40,7 +40,7 @@ class Curso:
         actualizado=True
         if conexion:
             cursor = conexion.cursor()
-            query = """UPDATE Cursos SET nombre = %s, descripcion = %s,creditos=%s WHERE id = %s"""
+            query = """UPDATE cursos SET nombre = %s, descripcion = %s,creditos=%s WHERE id = %s"""
             try:
                 cursor.execute(query, (nombre, descripcion,creditos, curso_id))
                 conexion.commit()
@@ -58,7 +58,7 @@ class Curso:
         eliminado=False
         if conexion:
             cursor = conexion.cursor()
-            query = "DELETE FROM Cursos WHERE id = %s"
+            query = "DELETE FROM cursos WHERE id = %s"
             try:
                 cursor.execute(query, (curso_id,))
                 conexion.commit()
