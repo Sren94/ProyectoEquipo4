@@ -11,7 +11,7 @@ class Estudiante:
         self.conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="123456",
+            password="",
             database="facultad"
         )
         self.cursor = self.conn.cursor()
@@ -113,7 +113,6 @@ class Estudiante:
         self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.tree.bind("<<TreeviewSelect>>", self.seleccionar_estudiante)
 
-    # ... resto de tus métodos sin cambios, no hace falta modificar la lógica
 
     def validar_fecha(self, fecha_str):
         try:
