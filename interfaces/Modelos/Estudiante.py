@@ -3,7 +3,6 @@ from tkinter import messagebox, ttk
 from tkinter import simpledialog
 import mysql.connector
 from datetime import datetime
-from interfaces.login import SuperAdminLogin
 
 class Estudiante:
     def __init__(self,  callback_volver=None):
@@ -12,6 +11,7 @@ class Estudiante:
             host="localhost",
             user="root",
             password="",
+            password="1103",
             database="facultad"
         )
         self.cursor = self.conn.cursor()

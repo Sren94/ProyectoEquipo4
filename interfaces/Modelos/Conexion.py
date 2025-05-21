@@ -12,6 +12,7 @@ def Conexion():
             host='localhost',
             user='root',
             password='',
+
             database='facultad'
         )
         if connection.is_connected():

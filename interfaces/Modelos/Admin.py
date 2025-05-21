@@ -14,7 +14,7 @@ def crear_admin(usuario, contrasena, rol='admin'):
         cursor = connection.cursor()
         contrasena_hash = bcrypt.hashpw(contrasena.encode(), bcrypt.gensalt()).decode()
         query = """
-        INSERT INTO Administradores (usuario, contrasena_hash, rol)
+        INSERT INTO administradores (usuario, contrasena_hash, rol)
         VALUES (%s, %s, %s)
         """
         try:
@@ -37,7 +37,7 @@ def login_superadmin(usuario, contrasena):
     if connection:
         cursor = connection.cursor(dictionary=True)
         query = """
-        SELECT contrasena_hash FROM Administradores
+        SELECT contrasena_hash FROM administradores
         WHERE usuario = %s AND rol = 'superadmin'
         """
         try:
