@@ -1,5 +1,5 @@
 # Módulo de Calificaciones 
-from Conexion import Conexion
+from .Conexion import Conexion
 from mysql.connector import Error
 
 class Calificacion:
