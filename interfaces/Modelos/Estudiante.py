@@ -10,7 +10,7 @@ class Estudiante:
         self.conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="1103",
+            password="",
             database="facultad"
         )
         self.cursor = self.conn.cursor()
