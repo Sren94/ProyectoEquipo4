@@ -52,8 +52,6 @@ class InterfazCalificaciones:
         btn_frame.pack(fill="x", pady=5)
 
         tk.Button(btn_frame, text="Agregar Calificación", command=self.agregar).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Editar Calificación", command=self.editar).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Eliminar Calificación", command=self.eliminar).pack(side="left", padx=5)
 
         # Bind para editar calificación con doble clic en la tabla
         self.tree_materias.bind("<Double-1>", self.editar_calificacion_en_tabla)
@@ -111,17 +109,17 @@ class InterfazCalificaciones:
         self.abrir_formulario(id_calif, valores)
 
     def eliminar(self):
-        seleccionado = self.tree_materias.selection()
-        if not seleccionado:
-            messagebox.showwarning("Aviso", "Seleccione una calificación para eliminar")
-            return
-        id_calif = seleccionado[0]
-        if str(id_calif).startswith("nuevo_"):
-            messagebox.showinfo("Información", "Esta materia no tiene calificación para eliminar")
-            return
-        if messagebox.askyesno("Confirmar", "¿Eliminar esta calificación?"):
-            Calificacion.eliminar_calificacion(id_calif)
-            self.mostrar_materias_por_alumno()
+            seleccionado = self.tree_materias.selection()
+            if not seleccionado:
+                messagebox.showwarning("Aviso", "Seleccione una calificación para eliminar")
+                return
+            id_calif = seleccionado[0]
+            if str(id_calif).startswith("nuevo_"):
+                messagebox.showinfo("Información", "Esta materia no tiene calificación para eliminar")
+                return
+            if messagebox.askyesno("Confirmar", "¿Eliminar esta calificación?"):
+                Calificacion.eliminar_calificacion(id_calif)
+                self.mostrar_materias_por_alumno()
 
     def abrir_formulario(self, id_calif=None, valores=None):
         form = tk.Toplevel(self.root)
