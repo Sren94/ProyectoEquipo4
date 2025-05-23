@@ -5,13 +5,20 @@ import tkinter as tk
 from .Modelos.Cursos import Curso  
 from .Modelos.Estudiante import Estudiante  # Para abrir la interfaz de estudiantes
 
+
 # Clase para la interfaz de Cursos (con botón Regresar)
+
+from interfaces.Modelos.Inscripcion import Inscripcion  # Asegúrate que esté en el path
+from datetime import datetime
+
+
+
 class InterfazCursos:
     def __init__(self, root, callback_volver):
         self.root = root
         self.callback_volver = callback_volver
-        self.root.title("Gestión de Cursos")
-        self.root.geometry("800x500")
+        self.root.title("Gestión de Cursos e Inscripciones")
+        self.root.geometry("800x550")
 
         # Pestañas
         tabs = ttk.Notebook(root)
@@ -21,7 +28,12 @@ class InterfazCursos:
         tabs.add(self.tab_inscripciones, text="Inscripciones")
         tabs.pack(fill="both", expand=True)
 
-        # ----- Formulario -----
+        self._crear_pestana_cursos()
+        self._crear_pestana_inscripciones()
+
+    # ----------- Pestaña Cursos -----------
+    def _crear_pestana_cursos(self):
+        # Formulario
         form_frame = tk.Frame(self.tab_cursos, bg="#f0ece8")
         form_frame.pack(fill="x", padx=10, pady=10)
 
@@ -37,7 +49,7 @@ class InterfazCursos:
         self.txt_descripcion = tk.Text(form_frame, width=40, height=4)
         self.txt_descripcion.grid(row=0, column=3, rowspan=2, padx=5, pady=5)
 
-        # ----- Botones -----
+        # Botones
         botones_frame = tk.Frame(form_frame, bg="#f0ece8")
         botones_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
@@ -53,39 +65,35 @@ class InterfazCursos:
         btn_regresar = tk.Button(botones_frame, text="Regresar", width=15, command=self.regresar)
         btn_regresar.pack(side="left", padx=10)
 
-        # ----- Tabla de cursos -----
+        # Tabla de cursos
         tabla_frame = tk.Frame(self.tab_cursos)
         tabla_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         columnas = ("id", "nombre", "descripcion", "creditos")
-        self.tree = ttk.Treeview(tabla_frame, columns=columnas, show="headings")
-        self.tree.heading("id", text="ID")
-        self.tree.heading("nombre", text="Nombre")
-        self.tree.heading("descripcion", text="Descripcion")
-        self.tree.heading("creditos", text="Creditos")
+        self.tree_cursos = ttk.Treeview(tabla_frame, columns=columnas, show="headings")
+        self.tree_cursos.heading("id", text="ID")
+        self.tree_cursos.heading("nombre", text="Nombre")
+        self.tree_cursos.heading("descripcion", text="Descripcion")
+        self.tree_cursos.heading("creditos", text="Creditos")
 
-        self.tree.column("id", width=100)
-        self.tree.column("nombre", width=200)
-        self.tree.column("descripcion", width=250)
-        self.tree.column("creditos", width=100)
+        self.tree_cursos.column("id", width=100)
+        self.tree_cursos.column("nombre", width=200)
+        self.tree_cursos.column("descripcion", width=250)
+        self.tree_cursos.column("creditos", width=100)
 
-        self.tree.pack(fill="both", expand=True)
+        self.tree_cursos.pack(fill="both", expand=True)
 
-        # Al seleccionar un item en la tabla
-        self.tree.bind("<<TreeviewSelect>>", self.cargar_curso_seleccionado)
+        self.tree_cursos.bind("<<TreeviewSelect>>", self.cargar_curso_seleccionado)
 
-        # Cargar cursos desde BD al iniciar
         self.cargar_cursos()
 
     def cargar_cursos(self):
-        # Limpiar tabla
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        # Obtener cursos desde la base de datos
+        for item in self.tree_cursos.get_children():
+            self.tree_cursos.delete(item)
         cursos = Curso.lista_cursos()
         if cursos:
             for curso in cursos:
-                self.tree.insert("", "end", values=(curso["id"], curso["nombre"], curso["descripcion"], curso["creditos"]))
+                self.tree_cursos.insert("", "end", values=(curso["id"], curso["nombre"], curso["descripcion"], curso["creditos"]))
 
     def crear_curso(self):
         nombre = self.entry_nombre.get().strip()
@@ -103,9 +111,9 @@ class InterfazCursos:
             messagebox.showerror("Error", "No se pudo crear el curso.")
 
     def cargar_curso_seleccionado(self, event):
-        seleccion = self.tree.selection()
+        seleccion = self.tree_cursos.selection()
         if seleccion:
-            item = self.tree.item(seleccion[0])
+            item = self.tree_cursos.item(seleccion[0])
             id_, nombre, descripcion, creditos = item["values"]
             self.curso_seleccionado_id = id_
             self.entry_nombre.delete(0, tk.END)
@@ -154,11 +162,95 @@ class InterfazCursos:
         self.txt_descripcion.delete("1.0", tk.END)
         self.entry_creditos.delete(0, tk.END)
         self.curso_seleccionado_id = None
-        self.tree.selection_remove(self.tree.selection())
+        self.tree_cursos.selection_remove(self.tree_cursos.selection())
 
+    # ----------- Pestaña Inscripciones -----------
+    def _crear_pestana_inscripciones(self):
+        # Etiquetas y entradas
+        tk.Label(self.tab_inscripciones, text="Id del estudiante:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+        self.entry_id_est = tk.Entry(self.tab_inscripciones)
+        self.entry_id_est.grid(row=0, column=1, pady=10)
+
+        tk.Label(self.tab_inscripciones, text="Id del curso:").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        self.entry_id_curso = tk.Entry(self.tab_inscripciones)
+        self.entry_id_curso.grid(row=1, column=1, pady=10)
+
+        # Botones
+        btn_inscribir = tk.Button(self.tab_inscripciones, text="Inscribir", command=self.inscribir)
+        btn_inscribir.grid(row=2, column=0, pady=10)
+
+        btn_baja = tk.Button(self.tab_inscripciones, text="Dar de baja", command=self.dar_baja)
+        btn_baja.grid(row=2, column=1, pady=10)
+
+        # Tabla de inscripciones
+        columns = ("ID Estudiante", "ID de curso", "Estado", "Fecha")
+        self.tree_inscripciones = ttk.Treeview(self.tab_inscripciones, columns=columns, show="headings")
+        for col in columns:
+            self.tree_inscripciones.heading(col, text=col)
+            self.tree_inscripciones.column(col, width=150)
+        self.tree_inscripciones.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+        self.cargar_inscripciones()
+
+    def cargar_inscripciones(self):
+        for item in self.tree_inscripciones.get_children():
+            self.tree_inscripciones.delete(item)
+        inscripciones = Inscripcion.lista_inscripciones()  
+        if inscripciones:
+            for ins in inscripciones:
+                self.tree_inscripciones.insert("", "end", values=(
+                    ins["id_estudiante"], ins["id_curso"], ins["estado"], ins["fecha_inscripcion"]
+                ))
+
+    
+    def inscribir(self):
+        id_estudiante = self.entry_id_est.get().strip()
+        id_curso = self.entry_id_curso.get().strip()
+        if not id_estudiante or not id_curso:
+            messagebox.showwarning("Validación", "Debe ingresar ambos ID de estudiante y curso.")
+            return
+
+        inscripciones = Inscripcion.lista_inscripciones()
+
+        for ins in inscripciones:
+            if ins["id_estudiante"] == id_estudiante and ins["id_curso"] == id_curso:
+                if ins["estado"].strip().lower() == "inscrito":
+                    messagebox.showwarning("Ya inscrito", "El estudiante ya está inscrito en este curso.")
+                    return
+
+        for ins in inscripciones:
+            if ins["id_estudiante"] == id_estudiante and ins["id_curso"] == id_curso:
+                if ins["estado"].strip().lower() == "baja":
+                    if Inscripcion.actualizar_estado(id_estudiante, id_curso, "inscrito"):
+                        messagebox.showinfo("Éxito", "Estudiante reinscrito correctamente.")
+                        self.cargar_inscripciones()
+                    else:
+                        messagebox.showerror("Error", "No se pudo reinscribir al estudiante.")
+                    return
+
+        if Inscripcion.crear_inscripcion(id_estudiante, id_curso, "inscrito"):
+            messagebox.showinfo("Éxito", "Estudiante inscrito correctamente.")
+            self.cargar_inscripciones()
+        else:
+            messagebox.showerror("Error", "No se pudo inscribir al estudiante.")
+
+    def dar_baja(self):
+        id_estudiante = self.entry_id_est.get().strip()
+        id_curso = self.entry_id_curso.get().strip()
+        if not id_estudiante or not id_curso:
+            messagebox.showwarning("Validación", "Debe ingresar ambos ID de estudiante y curso.")
+            return
+        if Inscripcion.baja(id_estudiante, id_curso):
+            messagebox.showinfo("Éxito", "Estudiante dado de baja correctamente")
+            self.cargar_inscripciones()
+        else:
+            messagebox.showerror("Error", "No se pudo dar de baja al estudiante")
+
+    # ----------- Botón Regresar -----------
     def regresar(self):
+        if self.callback_volver:
+            self.callback_volver()
         self.root.destroy()
-        self.callback_volver()
 
 
 # Luis Rene y Cintia
