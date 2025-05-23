@@ -3,7 +3,7 @@ from tkinter import messagebox, ttk
 from tkinter import simpledialog
 import mysql.connector
 from datetime import datetime
-
+from .Conexion import Conexion
 class Estudiante:
     def __init__(self,  callback_volver=None):
         self.callback_volver = callback_volver
@@ -45,6 +45,12 @@ class Estudiante:
         self.crear_interfaz()
         self.mostrar_estudiantes()
         self.root.mainloop()
+    def mostrar_estudiantes(self):
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+        self.cursor.execute("SELECT id, nombre, apellido, fecha_nacimiento, telefono, correo FROM estudiantes")
+        for row in self.cursor.fetchall():
+            self.tree.insert("", tk.END, values=row)
 
     def crear_interfaz(self):
         # Frame del formulario con fondo ligeramente más claro
@@ -149,13 +155,20 @@ class Estudiante:
         self.limpiar_campos()
         self.mostrar_estudiantes()
         messagebox.showinfo("Éxito", "Estudiante agregado correctamente")
-
-    def mostrar_estudiantes(self):
-        for row in self.tree.get_children():
-            self.tree.delete(row)
-        self.cursor.execute("SELECT id, nombre, apellido, fecha_nacimiento, telefono, correo FROM estudiantes")
-        for row in self.cursor.fetchall():
-            self.tree.insert("", tk.END, values=row)
+    @staticmethod
+    def lista_estudiantes():
+        connection = Conexion()
+        if connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute("SELECT * FROM estudiantes")
+                return cursor.fetchall()
+            except Exception as e:
+                print(f'Error al obtener estudiantes: {e}')
+                return []
+            finally:
+                connection.close()
+        return []
 
     def seleccionar_estudiante(self, event):
         item = self.tree.selection()

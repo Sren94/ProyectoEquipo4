@@ -7,12 +7,9 @@ from .Modelos.Estudiante import Estudiante
 from .Modelos.Inscripcion import Inscripcion
 from .Modelos.Calificaciones import Calificacion
 from datetime import datetime
+import csv
 
 # Clase para la interfaz de Calificaciones
-from tkinter import messagebox, ttk
-import tkinter as tk
-from .Modelos.Calificaciones import Calificacion
-
 class InterfazCalificaciones:
     def __init__(self, root, callback_volver):
         self.root = root
@@ -76,7 +73,6 @@ class InterfazCalificaciones:
             messagebox.showinfo("Información", f"No se encontró alumno con ID {id_est}")
             self.label_nombre_alumno.config(text="")
             return
-
         self.label_nombre_alumno.config(text=f"Nombre: {nombre}")
 
         resultados = Calificacion.obtener_materias_y_calificaciones_por_estudiante(id_est)
@@ -495,6 +491,170 @@ class SuperAdminLogin:
         boton_calificaciones = tk.Button(panel, text="Módulo de Gestión de Calificaciones", width=40, height=2,
                                        command=lambda: self.abrir_gestion_calificaciones(panel))
         boton_calificaciones.pack(pady=5)
+        
+        # Botón para resumen general
+        boton_resumen = tk.Button(panel, text="Ver Resumen General", width=40, height=2,
+                                command=self.mostrar_resumen_general)
+        boton_resumen.pack(pady=5)
+
+    def mostrar_resumen_general(self):
+        # Verificar si la ventana ya existe
+        if hasattr(self, 'resumen_window'):
+            try:
+                if self.resumen_window.winfo_exists():
+                    self.resumen_window.lift()
+                    return
+            except tk.TclError:
+                pass  # La ventana fue destruida
+    
+    # Crear nueva ventana
+        self.resumen_window = tk.Toplevel()
+        self.resumen_window.title("Resumen General del Sistema")
+        self.resumen_window.geometry("900x650")
+    
+    # Frame superior para el botón de regresar
+        top_frame = tk.Frame(self.resumen_window)
+        top_frame.pack(fill=tk.X, padx=5, pady=5)
+    
+    # Botón para regresar al menú principal
+        btn_regresar = tk.Button(top_frame, text="Regresar al Menú", 
+                            command=self._cerrar_resumen)
+        btn_regresar.pack(side=tk.LEFT)
+    
+    # Notebook (pestañas)
+        notebook = ttk.Notebook(self.resumen_window)
+        notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+    
+    # Pestaña de Alumnos
+        tab_alumnos = ttk.Frame(notebook)
+        self._crear_tabla_resumen(tab_alumnos, "Estudiantes", 
+                            ["ID", "Nombre", "Apellido", "Email", "Teléfono"],
+                            Estudiante.lista_estudiantes())
+    
+    # Pestaña de Cursos
+        tab_cursos = ttk.Frame(notebook)
+        self._crear_tabla_resumen(tab_cursos, "Cursos",
+                            ["ID", "Nombre", "Descripción", "Créditos"],
+                            Curso.lista_cursos())
+    
+    # Pestaña de Inscripciones
+        tab_inscripciones = ttk.Frame(notebook)
+        self._crear_tabla_resumen(tab_inscripciones, "Inscripciones",
+                            ["ID Estudiante", "ID Curso", "Estado", "Fecha"],
+                            Inscripcion.lista_inscripciones())
+    
+    # Pestaña de Calificaciones
+        tab_calificaciones = ttk.Frame(notebook)
+        self._crear_tabla_resumen(tab_calificaciones, "Calificaciones",
+                            ["ID", "ID Estudiante", "ID Curso", "Calificación"],
+                            Calificacion.listar_calificaciones())
+    
+    # Añadir pestañas
+        notebook.add(tab_alumnos, text="Alumnos")
+        notebook.add(tab_cursos, text="Cursos")
+        notebook.add(tab_inscripciones, text="Inscripciones")
+        notebook.add(tab_calificaciones, text="Calificaciones")
+    
+    # Botón para exportar a CSV
+        btn_frame = tk.Frame(self.resumen_window)
+        btn_frame.pack(fill=tk.X, pady=5)
+    
+        btn_exportar = tk.Button(btn_frame, text="Exportar a CSV", 
+                           command=self.exportar_resumen_a_csv)
+        btn_exportar.pack(side=tk.RIGHT, padx=10)
+    
+    # Configurar manejo de cierre
+        self.resumen_window.protocol("WM_DELETE_WINDOW", self._cerrar_resumen)
+
+    def _cerrar_resumen(self):
+        """Cierra la ventana de resumen y regresa al menú principal"""
+        if hasattr(self, 'resumen_window'):
+            self.resumen_window.destroy()
+            del self.resumen_window
+        # Opcional: hacer visible la ventana principal si está oculta
+        if hasattr(self, 'panel'):
+            self.panel.deiconify()
+    
+    def _crear_tabla_resumen(self, parent, title, columns, data):
+        tk.Label(parent, text=f"Resumen de {title}", font=('Arial', 12, 'bold')).pack(pady=5)
+        
+        tree = ttk.Treeview(parent, columns=columns, show="headings")
+        
+        # Configurar columnas
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=150, anchor="center")
+        
+        # Insertar datos
+        if data:
+            for item in data:
+                tree.insert("", "end", values=tuple(item.values()))
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
+    def exportar_resumen_a_csv(self):
+        import csv
+        from datetime import datetime
+        
+        # Obtener todos los datos
+        estudiantes = Estudiante.lista_estudiantes()
+        cursos = Curso.lista_cursos()
+        inscripciones = Inscripcion.lista_inscripciones()
+        calificaciones = Calificacion.listar_calificaciones()
+        
+        # Crear nombre de archivo con fecha
+        fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"resumen_sistema_{fecha}.csv"
+        
+        try:
+            with open(filename, mode='w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                
+                # Escribir sección de estudiantes
+                writer.writerow(["ESTUDIANTES"])
+                writer.writerow(["ID", "Nombre", "Apellido","telefono", "correo"])
+                for est in estudiantes:
+                    writer.writerow([est['id'], est['nombre'], est['apellido'], est['telefono'], est['correo']])
+                
+                writer.writerow([])  # Línea en blanco
+                
+                # Escribir sección de cursos
+                writer.writerow(["CURSOS"])
+                writer.writerow(["ID", "Nombre", "Descripción", "Créditos"])
+                for cur in cursos:
+                    writer.writerow([cur['id'], cur['nombre'], 
+                                    cur['descripcion'], cur['creditos']])
+                
+                writer.writerow([])  # Línea en blanco
+                
+                # Escribir sección de inscripciones
+                writer.writerow(["INSCRIPCIONES"])
+                writer.writerow(["ID Estudiante", "ID Curso", "Estado", "Fecha"])
+                for ins in inscripciones:
+                    writer.writerow([ins['id_estudiante'], ins['id_curso'], 
+                                   ins['estado'], ins['fecha_inscripcion']])
+                
+                writer.writerow([])  # Línea en blanco
+                
+                # Escribir sección de calificaciones
+                writer.writerow(["CALIFICACIONES"])
+                writer.writerow(["ID", "ID Estudiante", "ID Curso", "Calificación"])
+                for cal in calificaciones:
+                    writer.writerow([cal['id'], cal['id_estudiante'], 
+                                   cal['id_curso'], cal['nota']])
+            
+            messagebox.showinfo("Éxito", f"Resumen exportado correctamente a {filename}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo exportar el resumen: {str(e)}")
+    def cerrar_resumen(self):
+        if hasattr(self, 'resumen_window'):
+            self.resumen_window.destroy()
+            del self.resumen_window
 
     def login_superadmin(self, usuario, contrasena):
         connection = Conexion.Conexion()

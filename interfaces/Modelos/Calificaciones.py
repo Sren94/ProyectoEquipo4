@@ -55,17 +55,21 @@ class Calificacion:
 
     @staticmethod
     def listar_calificaciones():
-        conexion = Conexion()
-        if conexion:
-            cursor = conexion.cursor(dictionary=True)
-            consulta = "SELECT * FROM Calificaciones"
+        connection = Conexion()
+        
+        if connection:
+            cursor = connection.cursor(dictionary=True)
             try:
-                cursor.execute(consulta)
-                return cursor.fetchall()
+               
+                print(cursor.execute("SELECT * FROM calificaciones"))
+                cursos=cursor.fetchall()
+                return cursos
             except Exception as e:
-                print(f'Error al listar calificaciones: {e}')
+                print(f'Error al obtener calificaciones: {e}')
+                return []
             finally:
-                conexion.close()
+                connection.close()
+        return []
 
     @staticmethod
     def actualizar_calificacion(id_estudiante, id_curso, nota):
