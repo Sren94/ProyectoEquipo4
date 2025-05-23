@@ -70,28 +70,44 @@ class Curso:
                 conexion.close()
         return eliminado
     @staticmethod
-    def curso_por_alumno(estudiante_id):
+    def curso_por_alumno(estudiante_id=None):
         """
         Lista los cursos en los que está inscrito un estudiante.
+        Retorna una lista de diccionarios con los datos para mostrar en la tabla.
+        Si no se proporciona estudiante_id, retorna todos los registros.
         """
         conexion = Conexion()
         if conexion:
             cursor = conexion.cursor(dictionary=True)
             query = (
-                "SELECT c.id, c.nombre, c.descripcion, i.estado, i.fecha_inscripcion "
-                "FROM Inscripciones i "
-                "JOIN Cursos c ON i.id_curso = c.id "
-                "WHERE i.id_estudiante = %s"
-            )
+            "SELECT i.id_estudiante as 'ID Estudiante', "
+            "       i.id_curso as 'ID Curso', "
+            "       i.estado as 'Estado', "
+            "       i.fecha_inscripcion as 'Fecha' "
+            "FROM Inscripciones i "
+            "JOIN Cursos c ON i.id_curso = c.id "
+        )
+            params = ()
+        
+            if estudiante_id:
+                query += "WHERE i.id_estudiante = %s"
+                params = (estudiante_id,)
+            
             try:
-                cursor.execute(query, (estudiante_id,))
-                cursos_estudiante = cursor.fetchall()
-                print(f"Cursos del estudiante {estudiante_id}:")
-                for cursos in cursos_estudiante:
-                    print(cursos)
-                return cursos_estudiante
+                cursor.execute(query, params)
+                inscripciones = cursor.fetchall()
+            
+                # Formatear la fecha para cada registro
+                for insc in inscripciones:
+                    if insc['Fecha']:
+                        insc['Fecha'] = insc['Fecha'].strftime('%Y-%m-%d')
+                    else:
+                        insc['Fecha'] = ''
+            
+                return inscripciones if inscripciones else []
             except Exception as e:
                 print(f'Error al obtener cursos por alumno: {e}')
+                return []
             finally:
                 conexion.close()
 # Cursos.py - Método principal del módulo cursos

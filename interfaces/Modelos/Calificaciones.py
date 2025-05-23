@@ -108,7 +108,7 @@ class Calificacion:
         return eliminado
 
     @staticmethod
-    def calificaciones_por_alumno(id_estudiante):
+    def calificaciones_por_alumno(id_estudiante=None):
         resultados = []
         conexion = Conexion()
         if conexion:
@@ -131,26 +131,46 @@ class Calificacion:
         return resultados
 
     @staticmethod
-    def calificaciones_por_curso(id_curso):
-        resultados = []
+    def calificaciones_por_curso():
+        """
+     Obtiene las calificaciones de un curso específico.
+    Retorna lista de diccionarios con las columnas esperadas por _crear_tabla_resumen.
+    """
         conexion = Conexion()
         if conexion:
             cursor = conexion.cursor(dictionary=True)
             try:
                 cursor.execute(
                     """
-                    SELECT cal.id_estudiante, e.nombre AS estudiante, cal.nota, cal.fecha_registro
-                    FROM Calificaciones cal
-                    JOIN Estudiantes e ON cal.id_estudiante = e.id
-                    WHERE cal.id_curso = %s
-                    """, (id_curso,)
-                )
+                SELECT 
+                    cal.id as 'ID',
+                    cal.id_estudiante as 'ID Estudiante',
+                    cal.id_curso as 'ID Curso',
+                    cal.nota as 'nota'
+                FROM Calificaciones cal
+                
+                """, 
+            )
                 resultados = cursor.fetchall()
+            
+            # Formatear los resultados si es necesario
+                for resultado in resultados:
+                    if resultado['nota'] is None:
+                        resultado['nota'] = 'N/A'
+                    else:
+                    # Asegurar que la nota tenga 2 decimales si es numérico
+                        try:
+                            resultado['nota'] = round(float(resultado['nota']), 2)
+                        except (ValueError, TypeError):
+                            resultado['nota'] = 'N/A'
+            
+                return resultados if resultados else []
             except Exception as e:
                 print(f'Error al obtener calificaciones por curso: {e}')
+                return []
             finally:
                 conexion.close()
-        return resultados
+        return []
     
     @staticmethod
     def obtener_cursos():

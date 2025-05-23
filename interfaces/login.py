@@ -491,7 +491,7 @@ class SuperAdminLogin:
         boton_calificaciones.pack(pady=5)
         
         # Botón para resumen general
-        boton_resumen = tk.Button(panel, text="Ver Resumen General", width=40, height=2,
+        boton_resumen = tk.Button(panel, text="Módulo de Base de Datos y Reportes", width=40, height=2,
                                 command=self.mostrar_resumen_general)
         boton_resumen.pack(pady=5)
 
@@ -546,12 +546,25 @@ class SuperAdminLogin:
         self._crear_tabla_resumen(tab_calificaciones, "Calificaciones",
                             ["ID", "ID Estudiante", "ID Curso", "Calificación"],
                             Calificacion.listar_calificaciones())
+    # Pestaña de cursos por alumno
+        tab_cursos_por_alumno = ttk.Frame(notebook)
+        self._crear_tabla_resumen(tab_cursos_por_alumno, "cursos por alumno",
+                    ["ID Estudiante", "ID Curso", "Estado", "Fecha"],
+                    Curso.curso_por_alumno())
+    
+        tab_Calificaciones_por_curso = ttk.Frame(notebook)
+        self._crear_tabla_resumen(tab_Calificaciones_por_curso, "Calificaciones por curso",
+                    ["ID", "ID Estudiante", "ID Curso", "nota"],
+                    Calificacion.calificaciones_por_curso())
+        
     
     # Añadir pestañas
         notebook.add(tab_alumnos, text="Alumnos")
         notebook.add(tab_cursos, text="Cursos")
         notebook.add(tab_inscripciones, text="Inscripciones")
         notebook.add(tab_calificaciones, text="Calificaciones")
+        notebook.add(tab_cursos_por_alumno, text="Cursos por alumno")
+        notebook.add(tab_Calificaciones_por_curso, text="Calificacion por alumno")
     
     # Botón para exportar a CSV
         btn_frame = tk.Frame(self.resumen_window)
@@ -604,6 +617,9 @@ class SuperAdminLogin:
         cursos = Curso.lista_cursos()
         inscripciones = Inscripcion.lista_inscripciones()
         calificaciones = Calificacion.listar_calificaciones()
+        cursos_por_alumno=Curso.curso_por_alumno()
+        calificacion_por_alumno=Calificacion.calificaciones_por_alumno()
+        
         
         # Crear nombre de archivo con fecha
         fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -645,6 +661,30 @@ class SuperAdminLogin:
                 for cal in calificaciones:
                     writer.writerow([cal['id'], cal['id_estudiante'], 
                                    cal['id_curso'], cal['nota']])
+                        # Escribir sección de cursos por alumno
+                writer.writerow(["CURSOS POR ALUMNO"])
+                writer.writerow(["ID Estudiante", "ID Curso", "Nombre Curso", "Estado", "Fecha Inscripción"])
+                for curso in cursos_por_alumno:
+                    writer.writerow([
+                    curso.get('id_estudiante', ''),
+                    curso.get('id_curso', ''),
+                    curso.get('nombre_curso', curso.get('nombre', '')),  # Por si usa diferente nombre
+                    curso.get('estado', ''),
+                curso.get('fecha_inscripcion', '')
+                    ])
+        
+                writer.writerow([])  # Línea en blanco
+        
+        # Escribir sección de calificaciones por alumno
+                writer.writerow(["CALIFICACIONES POR ALUMNO"])
+                writer.writerow(["ID Estudiante", "ID Curso", "Nombre Curso", "Nota", "Fecha Registro"])
+                for calif in calificacion_por_alumno:
+                    writer.writerow([
+                        calif.get('id_estudiante', ''),
+                        calif.get('id_curso', ''),
+                        calif.get('nombre_curso', calif.get('nombre', '')),  # Por si usa diferente nombre
+                        calif.get('nota', ''),
+                        calif.get('fecha_registro', '')])
             
             messagebox.showinfo("Éxito", f"Resumen exportado correctamente a {filename}")
         except Exception as e:
