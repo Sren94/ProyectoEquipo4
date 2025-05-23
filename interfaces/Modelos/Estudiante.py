@@ -11,10 +11,6 @@ class Estudiante:
             host="localhost",
             user="root",
             password="",
-<<<<<<< HEAD
-            password="1103",
-=======
->>>>>>> 314ddcd81bfe8fa6f9352912c1df79d5728c959d
             database="facultad"
         )
         self.cursor = self.conn.cursor()
