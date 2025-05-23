@@ -1,10 +1,10 @@
-from Conexion import Conexion
+from .Conexion import Conexion
 class Inscripcion:
     @staticmethod
     def crear_inscripcion(id_estudiante, id_curso, estado):
         """
         Crea una nueva inscripción para un estudiante en un curso.
-        Retorna True si se registra, False en caso de error.
+        Retorna True si se registra, False en caso de error o si ya existe una inscripción activa.
         """
         registrado = False
         conexion = Conexion()
@@ -16,10 +16,22 @@ class Inscripcion:
                 if cursor.fetchone() is None:
                     print('Error: Estudiante no existe')
                     return False
+                
                 cursor.execute("SELECT id FROM Cursos WHERE id = %s", (id_curso,))
                 if cursor.fetchone() is None:
                     print('Error: Curso no existe')
                     return False
+                
+                
+                cursor.execute(
+                    "SELECT id FROM Inscripciones WHERE id_estudiante = %s AND id_curso = %s AND estado = 'inscrito'",
+                    (id_estudiante, id_curso)
+                )
+                if cursor.fetchone() is not None:
+                    print('Error: Ya existe una inscripción activa para este estudiante en el curso')
+                    return False
+                
+                
                 consulta = (
                     "INSERT INTO Inscripciones (id_estudiante, id_curso, estado, fecha_inscripcion) "
                     "VALUES (%s, %s, %s, CURRENT_DATE)"
@@ -146,6 +158,53 @@ class Inscripcion:
             finally:
                 conexion.close()
         return resultados
+##########################
+    @staticmethod
+    def lista_inscripciones():
+        """
+        Devuelve una lista con todas las inscripciones registradas en la base de datos.
+        """
+        resultados = []
+        conexion = Conexion()
+        if conexion:
+            cursor = conexion.cursor(dictionary=True)
+            try:
+                cursor.execute("SELECT * FROM Inscripciones")
+                resultados = cursor.fetchall()
+            except Exception as e:
+                print(f'Error al obtener todas las inscripciones: {e}')
+            finally:
+                conexion.close()
+        return resultados
+    
+    @staticmethod
+    def baja(id_estudiante, id_curso):
+        """
+        Cambia el estado de una inscripción activa (estado 'inscrito') a 'baja'
+        para el estudiante y curso especificados.
+        """
+        exito = False
+        conexion = Conexion()
+        if conexion:
+            cursor = conexion.cursor()
+            try:
+                cursor.execute(
+                    """
+                    UPDATE Inscripciones
+                    SET estado = %s, fecha_inscripcion= NOW()
+                    WHERE id_estudiante = %s AND id_curso = %s AND estado = %s
+                    """,
+                    ("baja", id_estudiante, id_curso, "inscrito")
+                )
+                if cursor.rowcount > 0:
+                    conexion.commit()
+                    exito = True
+            except Exception as e:
+                print(f'Error al dar de baja la inscripción: {e}')
+            finally:
+                conexion.close()
+        return exito
+
 
 
 def menu_inscripciones():
@@ -189,6 +248,8 @@ def menu_inscripciones():
             break
         else:
             print("Opción no válida.")
+
+    
 
 if __name__ == '__main__':
     menu_inscripciones()
